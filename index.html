@@ -112,19 +112,20 @@
                 <!-- Content Grid: Transaction List & Detail Verification -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    <!-- Left: Transaction List (List View with Search Box) -->
+                    <!-- Left: Transaction List (List View with Status Filter Buttons) -->
                     <div class="bg-white rounded-2xl shadow-xl border border-red-100 p-6 flex flex-col h-[720px]">
-                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
                             <h2 class="font-bold text-slate-900 text-base">รายการธุรกรรม (Task List)</h2>
                             <span id="taskCount" class="text-xs bg-red-50 text-red-700 px-3 py-1 rounded-full font-bold">0 รายการ</span>
                         </div>
                         
-                        <!-- Search Box ฝั่งซ้าย: ค้นหาจากรหัสธุรกรรม, ชื่อรายการ, ยอดราคาสุทธิ, สถานะ -->
-                        <div class="mb-4">
-                            <div class="relative">
-                                <input type="text" id="leftSearchBox" oninput="filterTransactionList()" placeholder="🔍 ค้นหารหัส, ชื่อรายการ, ยอดเงิน, สถานะ..." class="w-full border border-slate-300 rounded-xl py-2 px-3 pl-9 text-xs focus:ring-2 focus:ring-red-500 focus:outline-none bg-slate-50">
-                                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </div>
+                        <!-- เปลี่ยนจากช่องค้นหา เป็น ปุ่มเมนู Filter สถานะเอกสาร -->
+                        <div class="mb-4 grid grid-cols-2 gap-1.5">
+                            <button onclick="filterByStatus('all')" id="filterBtn-all" class="text-[11px] font-semibold py-1.5 px-2 rounded-lg bg-red-600 text-white transition shadow-sm">ทั้งหมด</button>
+                            <button onclick="filterByStatus('รอตรวจสอบ')" id="filterBtn-รอตรวจสอบ" class="text-[11px] font-semibold py-1.5 px-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">รอตรวจสอบ</button>
+                            <button onclick="filterByStatus('ปกติ')" id="filterBtn-ปกติ" class="text-[11px] font-semibold py-1.5 px-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">ปกติ</button>
+                            <button onclick="filterByStatus('พบปัญหา/รอแก้ไข')" id="filterBtn-พบปัญหา/รอแก้ไข" class="text-[11px] font-semibold py-1.5 px-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">พบปัญหา</button>
+                            <button onclick="filterByStatus('ถูกยกเลิกแล้ว')" id="filterBtn-ถูกยกเลิกแล้ว" class="col-span-2 text-[11px] font-semibold py-1.5 px-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">ถูกยกเลิกแล้ว</button>
                         </div>
 
                         <div id="transactionList" class="space-y-3.5 overflow-y-auto pr-1 flex-1">
@@ -147,6 +148,14 @@
                         <!-- Footer Action Buttons (Escalation & Audit Controls) -->
                         <div id="actionPanel" class="border-t border-slate-200 pt-6 mt-6 hidden">
                             <p class="text-xs font-bold text-slate-700 mb-3">🛠️ เครื่องมือตรวจสอบและจัดการสำหรับนักบัญชี (Audit Actions):</p>
+                            
+                            <!-- เพิ่มปุ่มพิเศษ กรณีสถานะเป็น พบปัญหา สามารถกดแก้ไขเรียบร้อยและปรับเป็นปกติได้ -->
+                            <div id="resolveProblemContainer" class="mb-3 hidden">
+                                <button onclick="resolveProblem()" class="w-full bg-emerald-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-emerald-700 transition font-bold flex items-center justify-center space-x-2 shadow-md">
+                                    <span>✅ แก้ไขปัญหาเรียบร้อยแล้ว (ปรับสถานะเป็นปกติ)</span>
+                                </button>
+                            </div>
+
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <button onclick="openLineChat('supplier')" class="bg-emerald-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-emerald-700 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
                                     <span>💬 แชท Supplier</span>
@@ -196,7 +205,6 @@
 
     <!-- JavaScript Embedded -->
     <script>
-        // รายชื่ออีเมลที่อนุญาตให้เข้าสู่ระบบ
         const allowedEmails = ["bankpetstation@gmail.com", "pets.station681@gmail.com"];
 
         function handleLogin() {
@@ -268,6 +276,7 @@
 
         let currentSelectedId = null;
         let isEditMode = false;
+        let currentFilterStatus = 'all';
 
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('btnToday').addEventListener('click', () => {
@@ -290,19 +299,29 @@
             });
         });
 
-        // ฟังก์ชันกรองและค้นหารายการฝั่งซ้าย (รหัสธุรกรรม, ชื่อรายการ, ยอดราคาสุทธิ, สถานะ)
-        function filterTransactionList() {
-            const keyword = document.getElementById('leftSearchBox').value.toLowerCase().trim();
-            const filtered = transactionData.filter(item => {
-                const matchId = item.id.toLowerCase().includes(keyword);
-                const matchSupplier = item.supplier.toLowerCase().includes(keyword);
-                const matchStatus = item.status.toLowerCase().includes(keyword);
-                const matchAmount = item.totalAmount.toString().includes(keyword);
-                const matchItemName = item.itemsOrdered.some(i => i.name.toLowerCase().includes(keyword));
-
-                return matchId || matchSupplier || matchStatus || matchAmount || matchItemName;
+        // ฟังก์ชันกรองสถานะด้วยปุ่ม Filter เมนูด้านซ้าย
+        function filterByStatus(status) {
+            currentFilterStatus = status;
+            
+            // ปรับแต่ง Active State ของปุ่มเมนู
+            const statuses = ['all', 'รอตรวจสอบ', 'ปกติ', 'พบปัญหา/รอแก้ไข', 'ถูกยกเลิกแล้ว'];
+            statuses.forEach(s => {
+                const btn = document.getElementById(`filterBtn-${s}`);
+                if (btn) {
+                    if (s === status) {
+                        btn.className = "text-[11px] font-semibold py-1.5 px-2 rounded-lg bg-red-600 text-white transition shadow-sm";
+                    } else {
+                        btn.className = "text-[11px] font-semibold py-1.5 px-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+                    }
+                }
             });
-            renderTransactionList(filtered);
+
+            if (status === 'all') {
+                renderTransactionList(transactionData);
+            } else {
+                const filtered = transactionData.filter(item => item.status === status);
+                renderTransactionList(filtered);
+            }
         }
 
         function renderTransactionList(items) {
@@ -311,7 +330,7 @@
             listContainer.innerHTML = '';
 
             if (items.length === 0) {
-                listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">ไม่พบรายการธุรกรรมที่ค้นหา</p>`;
+                listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">ไม่พบรายการธุรกรรมในสถานะนี้</p>`;
                 return;
             }
 
@@ -345,7 +364,17 @@
             isEditMode = false;
             renderDetailView();
             document.getElementById('actionPanel').classList.remove('hidden');
-            renderTransactionList(transactionData);
+            
+            // เช็คว่าถ้าสถานะเป็น "พบปัญหา/รอแก้ไข" ให้แสดงปุ่มพิเศษแก้ไขปัญหาเรียบร้อย
+            const item = transactionData.find(t => t.id === id);
+            const resolveContainer = document.getElementById('resolveProblemContainer');
+            if (item && item.status === 'พบปัญหา/รอแก้ไข') {
+                resolveContainer.classList.remove('hidden');
+            } else {
+                resolveContainer.classList.add('hidden');
+            }
+
+            filterByStatus(currentFilterStatus);
         }
 
         function renderDetailView() {
@@ -387,7 +416,6 @@
                 <div>
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 mb-4 gap-2">
                         <div>
-                            <!-- เปลี่ยนคำว่า PK เป็น รหัสธุรกรรม ตามคำขอ -->
                             <span class="text-xs bg-red-100 text-red-800 font-bold px-3 py-1 rounded-lg">รหัสธุรกรรม: ${item.id}</span>
                             <h2 class="text-base font-bold text-slate-900 mt-1.5">${item.supplier}</h2>
                         </div>
@@ -450,6 +478,19 @@
             alert('บันทึกการแก้ไขรายการและราคาเรียบร้อยแล้ว!');
         }
 
+        // ปุ่มกดกรณีแก้ไขปัญหาเรียบร้อยแล้ว ปรับสถานะกลับเป็น "ปกติ"
+        function resolveProblem() {
+            const item = transactionData.find(t => t.id === currentSelectedId);
+            if (item) {
+                item.status = 'ปกติ';
+                item.remark = 'แก้ไขปัญหาเรียบร้อยแล้ว ตรวจสอบถูกต้อง';
+            }
+            alert('แก้ไขปัญหาเรียบร้อย! ระบบปรับสถานะเป็น "ปกติ" แล้ว');
+            document.getElementById('resolveProblemContainer').classList.add('hidden');
+            renderDetailView();
+            filterByStatus(currentFilterStatus);
+        }
+
         function openLineChat(target) {
             if (target === 'supplier') {
                 alert('ระบบกำลังเปิดหน้า Line OA ของ Supplier เพื่อพูดคุยและทวงถามเอกสาร...');
@@ -467,12 +508,14 @@
                 item.remark = remarkVal;
                 if (remarkVal && remarkVal !== '-' && remarkVal.trim() !== '') {
                     item.status = 'พบปัญหา/รอแก้ไข';
+                    document.getElementById('resolveProblemContainer').classList.remove('hidden');
                 } else {
                     item.status = 'ปกติ';
+                    document.getElementById('resolveProblemContainer').classList.add('hidden');
                 }
             }
             document.getElementById('successPopup').classList.remove('hidden');
-            renderTransactionList(transactionData);
+            filterByStatus(currentFilterStatus);
         }
 
         function closeSuccessPopup() {
@@ -488,7 +531,8 @@
                     item.remark = 'ยกเลิกรายการและขอรหัสธุรกรรมใหม่จากเถ้าแก่แล้ว';
                 }
                 alert('ส่งข้อความแจ้งเตือนหาเถ้าแก่ (Owner) ผ่าน Line OA สำเร็จ และอัปเดตสถานะเป็น "ถูกยกเลิกแล้ว" เรียบร้อย');
-                renderTransactionList(transactionData);
+                document.getElementById('resolveProblemContainer').classList.add('hidden');
+                filterByStatus(currentFilterStatus);
                 selectTransaction(currentSelectedId);
             }
         }
