@@ -20,115 +20,164 @@
 </head>
 <body class="bg-red-900 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <div>
-        <!-- Header / Navigation (Red Theme & Full Width Large View) -->
-        <header class="bg-red-950 text-white border-b border-red-800 shadow-lg sticky top-0 z-30">
-            <div class="max-w-[96%] mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-red-600 text-white p-2.5 rounded-xl font-bold shadow-md shadow-red-900">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-bold text-white tracking-wide">ระบบตรวจสอบเอกสารและธุรกรรมนักบัญชี</h1>
-                        <p class="text-xs text-red-300 font-medium">สถานีสัตว์เลี้ยง (Accounting Verification Module - Full View)</p>
-                    </div>
+    <!-- Login Section (หน้าล็อกอินก่อนเข้าระบบ) -->
+    <div id="loginSection" class="fixed inset-0 bg-red-950 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-red-100">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-red-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-red-200">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 </div>
-                <div class="mt-3 md:mt-0 flex items-center space-x-3">
-                    <!-- ปุ่มประวัติการตรวจ และ เมนูสลับกลับ Tasklist -->
-                    <button onclick="toggleAuditHistoryView()" id="btnToggleHistory" class="bg-red-800 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-xl font-medium transition shadow-sm border border-red-700">
-                        📜 ประวัติการตรวจ
-                    </button>
-                    <span class="text-xs bg-red-900 text-red-200 border border-red-700 px-4 py-2 rounded-xl font-medium shadow-inner">👤 ผู้ใช้งาน: นักบัญชี (Audit Team)</span>
-                </div>
+                <h2 class="text-xl font-bold text-slate-900">เข้าสู่ระบบตรวจสอบบัญชี</h2>
+                <p class="text-xs text-red-600 font-medium mt-1">สถานีสัตว์เลี้ยง (Accounting Audit System)</p>
             </div>
-        </header>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">อีเมลผู้ใช้งาน (Email)</label>
+                    <input type="email" id="loginEmail" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none" placeholder="ระบุอีเมลนักบัญชี...">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">รหัสผ่าน (Password)</label>
+                    <input type="password" id="loginPassword" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none" placeholder="ระบุรหัสผ่าน...">
+                </div>
+                <div id="loginError" class="text-xs text-red-600 font-medium text-center hidden">
+                    * อีเมลหรือรหัสผ่านไม่ถูกต้อง (อนุญาตเฉพาะอีเมลที่กำหนดและรหัสผ่าน 4321)
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-red-600 text-white font-bold py-3.5 px-6 rounded-xl hover:bg-red-700 transition shadow-md shadow-red-200 text-sm">
+                    เข้าสู่ระบบ
+                </button>
+            </div>
+            <div class="mt-6 text-center text-[11px] text-slate-400">
+                Authorized Access Only - สถานีสัตว์เลี้ยง
+            </div>
+        </div>
+    </div>
 
-        <!-- Main Container (Expanded to Full Screen Width) -->
-        <main class="max-w-[96%] mx-auto px-4 py-8">
-
-            <!-- Filter & Control Section -->
-            <section class="bg-white p-6 rounded-2xl shadow-xl border border-red-100 mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-                    <!-- Quick Filter Today -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-2">ตัวกรองด่วน</label>
-                        <button id="btnToday" class="w-full bg-red-50 text-red-700 border border-red-200 font-semibold py-2.5 px-4 rounded-xl text-sm hover:bg-red-100 transition flex items-center justify-center space-x-1 shadow-sm">
-                            <span>📅 กรองรายการวันนี้ (Today)</span>
+    <!-- Main App Container (จะแสดงเมื่อ Login ผ่านแล้ว) -->
+    <div id="appContainer" class="hidden flex-1 flex flex-col justify-between">
+        <div>
+            <!-- Header / Navigation -->
+            <header class="bg-red-950 text-white border-b border-red-800 shadow-lg sticky top-0 z-30">
+                <div class="max-w-[96%] mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-red-600 text-white p-2.5 rounded-xl font-bold shadow-md shadow-red-900">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-bold text-white tracking-wide">ระบบตรวจสอบเอกสารและธุรกรรมนักบัญชี</h1>
+                            <p class="text-xs text-red-300 font-medium">สถานีสัตว์เลี้ยง (Accounting Verification Module - Full View)</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 md:mt-0 flex items-center space-x-3">
+                        <span id="userEmailDisplay" class="text-xs bg-red-900 text-red-200 border border-red-700 px-4 py-2 rounded-xl font-medium shadow-inner">👤 ผู้ใช้งาน: -</span>
+                        <button onclick="handleLogout()" class="bg-red-800 hover:bg-red-700 text-white text-xs px-4 py-2 rounded-xl font-medium transition shadow-sm border border-red-700">
+                            ออกจากระบบ
                         </button>
                     </div>
-                    <!-- Date Range Start -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-2">ตั้งแต่วันที่</label>
-                        <input type="date" id="startDate" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
-                    </div>
-                    <!-- Date Range End -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-2">ถึงวันที่</label>
-                        <input type="date" id="endDate" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
-                    </div>
-                    <!-- Action Search -->
-                    <div>
-                        <button id="btnFilter" class="w-full bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl text-sm hover:bg-red-700 transition shadow-md shadow-red-200">
-                            🔍 ค้นหาข้อมูลช่วงวันที่
-                        </button>
-                    </div>
                 </div>
-            </section>
+            </header>
 
-            <!-- Content Grid: Transaction List & Detail Verification -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Container -->
+            <main class="max-w-[96%] mx-auto px-4 py-8">
 
-                <!-- Left: Transaction List (List View) -->
-                <div class="bg-white rounded-2xl shadow-xl border border-red-100 p-6 flex flex-col h-[720px]">
-                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
-                        <h2 id="listTitle" class="font-bold text-slate-900 text-base">รายการธุรกรรม (Task List)</h2>
-                        <span id="taskCount" class="text-xs bg-red-50 text-red-700 px-3 py-1 rounded-full font-bold">0 รายการ</span>
-                    </div>
-                    <div id="transactionList" class="space-y-3.5 overflow-y-auto pr-1 flex-1">
-                        <!-- รายการจะถูก Render ที่นี่ -->
-                    </div>
-                </div>
-
-                <!-- Right: Document Verification & Action Panel -->
-                <div class="bg-white rounded-2xl shadow-xl border border-red-100 p-8 lg:col-span-2 flex flex-col justify-between min-h-[720px]">
-                    <div id="detailView">
-                        <!-- Default State เมื่อยังไม่เลือกรายการ -->
-                        <div class="text-center py-44 text-slate-400">
-                            <svg class="w-20 h-20 mx-auto mb-4 text-red-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <p class="text-base font-semibold text-slate-600">กรุณาเลือกเลขอ้างอิงธุรกรรม (Primary Key) จากด้านซ้าย เพื่อตรวจสอบหลักฐาน</p>
-                        </div>
-                    </div>
-
-                    <!-- Footer Action Buttons (Escalation & Audit Controls) -->
-                    <div id="actionPanel" class="border-t border-slate-200 pt-6 mt-6 hidden">
-                        <p class="text-xs font-bold text-slate-700 mb-3">🛠️ เครื่องมือตรวจสอบและจัดการสำหรับนักบัญชี (Audit Actions):</p>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <button onclick="openLineChat('supplier')" class="bg-emerald-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-emerald-700 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
-                                <span>💬 แชท Supplier</span>
-                            </button>
-                            <button onclick="openLineChat('staff')" class="bg-sky-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-sky-700 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
-                                <span>👥 แชทพนักงาน</span>
-                            </button>
-                            <button onclick="toggleEditMode()" id="btnEditDoc" class="bg-amber-500 text-white text-xs py-3 px-4 rounded-xl hover:bg-amber-600 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
-                                <span>✏️ แก้ไขเอกสาร</span>
-                            </button>
-                            <button onclick="saveAudit()" class="bg-red-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-red-700 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
-                                <span>💾 บันทึกผลตรวจ</span>
+                <!-- Filter & Control Section -->
+                <section class="bg-white p-6 rounded-2xl shadow-xl border border-red-100 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                        <!-- Quick Filter Today -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">ตัวกรองด่วน</label>
+                            <button id="btnToday" class="w-full bg-red-50 text-red-700 border border-red-200 font-semibold py-2.5 px-4 rounded-xl text-sm hover:bg-red-100 transition flex items-center justify-center space-x-1 shadow-sm">
+                                <span>📅 กรองรายการวันนี้ (Today)</span>
                             </button>
                         </div>
-                        <!-- Escalation Button to Owner -->
-                        <div class="mt-3">
-                            <button onclick="notifyOwner()" class="w-full bg-slate-900 text-white text-xs py-3.5 px-4 rounded-xl hover:bg-slate-800 transition font-bold flex items-center justify-center space-x-2 shadow-md">
-                                <span>🚨 ยกเลิกรายการ & ส่งแชทหาเถ้าแก่ผ่าน Line OA (ขอสร้างรหัสธุรกรรมใหม่)</span>
+                        <!-- Date Range Start -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">ตั้งแต่วันที่</label>
+                            <input type="date" id="startDate" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        </div>
+                        <!-- Date Range End -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">ถึงวันที่</label>
+                            <input type="date" id="endDate" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        </div>
+                        <!-- Action Search -->
+                        <div>
+                            <button id="btnFilter" class="w-full bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl text-sm hover:bg-red-700 transition shadow-md shadow-red-200">
+                                🔍 ค้นหาข้อมูลช่วงวันที่
                             </button>
                         </div>
                     </div>
-                </div>
+                </section>
 
-            </div>
-        </main>
+                <!-- Content Grid: Transaction List & Detail Verification -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                    <!-- Left: Transaction List (List View with Search Box) -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-red-100 p-6 flex flex-col h-[720px]">
+                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                            <h2 class="font-bold text-slate-900 text-base">รายการธุรกรรม (Task List)</h2>
+                            <span id="taskCount" class="text-xs bg-red-50 text-red-700 px-3 py-1 rounded-full font-bold">0 รายการ</span>
+                        </div>
+                        
+                        <!-- Search Box ฝั่งซ้าย: ค้นหาจากรหัสธุรกรรม, ชื่อรายการ, ยอดราคาสุทธิ, สถานะ -->
+                        <div class="mb-4">
+                            <div class="relative">
+                                <input type="text" id="leftSearchBox" oninput="filterTransactionList()" placeholder="🔍 ค้นหารหัส, ชื่อรายการ, ยอดเงิน, สถานะ..." class="w-full border border-slate-300 rounded-xl py-2 px-3 pl-9 text-xs focus:ring-2 focus:ring-red-500 focus:outline-none bg-slate-50">
+                                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                        </div>
+
+                        <div id="transactionList" class="space-y-3.5 overflow-y-auto pr-1 flex-1">
+                            <!-- รายการจะถูก Render ที่นี่ -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Document Verification & Action Panel -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-red-100 p-8 lg:col-span-2 flex flex-col justify-between min-h-[720px]">
+                        <div id="detailView">
+                            <!-- Default State เมื่อยังไม่เลือกรายการ -->
+                            <div class="text-center py-44 text-slate-400">
+                                <svg class="w-20 h-20 mx-auto mb-4 text-red-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <p class="text-base font-semibold text-slate-600">กรุณาเลือกรหัสธุรกรรมจากด้านซ้าย เพื่อตรวจสอบหลักฐาน</p>
+                            </div>
+                        </div>
+
+                        <!-- Footer Action Buttons (Escalation & Audit Controls) -->
+                        <div id="actionPanel" class="border-t border-slate-200 pt-6 mt-6 hidden">
+                            <p class="text-xs font-bold text-slate-700 mb-3">🛠️ เครื่องมือตรวจสอบและจัดการสำหรับนักบัญชี (Audit Actions):</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <button onclick="openLineChat('supplier')" class="bg-emerald-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-emerald-700 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
+                                    <span>💬 แชท Supplier</span>
+                                </button>
+                                <button onclick="openLineChat('staff')" class="bg-sky-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-sky-700 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
+                                    <span>👥 แชทพนักงาน</span>
+                                </button>
+                                <button onclick="toggleEditMode()" id="btnEditDoc" class="bg-amber-500 text-white text-xs py-3 px-4 rounded-xl hover:bg-amber-600 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
+                                    <span>✏️ แก้ไขเอกสาร</span>
+                                </button>
+                                <button onclick="saveAudit()" class="bg-red-600 text-white text-xs py-3 px-4 rounded-xl hover:bg-red-700 transition font-semibold flex items-center justify-center space-x-1 shadow-sm">
+                                    <span>💾 บันทึกผลตรวจ</span>
+                                </button>
+                            </div>
+                            <!-- Escalation Button to Owner -->
+                            <div class="mt-3">
+                                <button onclick="notifyOwner()" class="w-full bg-slate-900 text-white text-xs py-3.5 px-4 rounded-xl hover:bg-slate-800 transition font-bold flex items-center justify-center space-x-2 shadow-md">
+                                    <span>🚨 ยกเลิกรายการ & ส่งแชทหาเถ้าแก่ผ่าน Line OA (ขอสร้างรหัสธุรกรรมใหม่)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer Copyright -->
+        <footer class="bg-red-950 text-red-300 text-center py-4 text-xs border-t border-red-800 mt-12">
+            &copy; 2026 สถานีสัตว์เลี้ยง - Accounting Audit & Transaction Verification System. All rights reserved.
+        </footer>
     </div>
 
     <!-- Popup Modal สำหรับบันทึกผลการตรวจเสร็จสิ้น -->
@@ -145,13 +194,34 @@
         </div>
     </div>
 
-    <!-- Footer Copyright -->
-    <footer class="bg-red-950 text-red-300 text-center py-4 text-xs border-t border-red-800 mt-12">
-        &copy; 2026 สถานีสัตว์เลี้ยง - Accounting Audit & Transaction Verification System. All rights reserved.
-    </footer>
-
     <!-- JavaScript Embedded -->
     <script>
+        // รายชื่ออีเมลที่อนุญาตให้เข้าสู่ระบบ
+        const allowedEmails = ["bankpetstation@gmail.com", "pets.station681@gmail.com"];
+
+        function handleLogin() {
+            const emailInput = document.getElementById('loginEmail').value.trim().toLowerCase();
+            const passInput = document.getElementById('loginPassword').value.trim();
+            const errorEl = document.getElementById('loginError');
+
+            if (allowedEmails.includes(emailInput) && passInput === "4321") {
+                errorEl.classList.add('hidden');
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                document.getElementById('userEmailDisplay').innerText = `👤 ผู้ใช้งาน: ${emailInput}`;
+                renderTransactionList(transactionData);
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
         let transactionData = [
             {
                 id: "202611001",
@@ -198,11 +268,8 @@
 
         let currentSelectedId = null;
         let isEditMode = false;
-        let isHistoryView = false;
 
         document.addEventListener("DOMContentLoaded", () => {
-            renderTransactionList(transactionData);
-
             document.getElementById('btnToday').addEventListener('click', () => {
                 const todayStr = "2026-11-11";
                 const filtered = transactionData.filter(item => item.date === todayStr);
@@ -223,23 +290,19 @@
             });
         });
 
-        // สลับมุมมองไkola Task List กับ ประวัติการตรวจ
-        function toggleAuditHistoryView() {
-            isHistoryView = !isHistoryView;
-            const btnToggle = document.getElementById('btnToggleHistory');
-            const listTitle = document.getElementById('listTitle');
+        // ฟังก์ชันกรองและค้นหารายการฝั่งซ้าย (รหัสธุรกรรม, ชื่อรายการ, ยอดราคาสุทธิ, สถานะ)
+        function filterTransactionList() {
+            const keyword = document.getElementById('leftSearchBox').value.toLowerCase().trim();
+            const filtered = transactionData.filter(item => {
+                const matchId = item.id.toLowerCase().includes(keyword);
+                const matchSupplier = item.supplier.toLowerCase().includes(keyword);
+                const matchStatus = item.status.toLowerCase().includes(keyword);
+                const matchAmount = item.totalAmount.toString().includes(keyword);
+                const matchItemName = item.itemsOrdered.some(i => i.name.toLowerCase().includes(keyword));
 
-            if (isHistoryView) {
-                btnToggle.innerText = "📋 กลับสู่ Task List";
-                listTitle.innerText = "📜 ประวัติการตรวจ (Audit History)";
-                // กรองเฉพาะรายการที่ตรวจสอบแล้วหรือปกติ/พบปัญหา
-                const historyItems = transactionData.filter(item => item.status !== 'รอตรวจสอบ');
-                renderTransactionList(historyItems);
-            } else {
-                btnToggle.innerText = "📜 ประวัติการตรวจ";
-                listTitle.innerText = "รายการธุรกรรม (Task List)";
-                renderTransactionList(transactionData);
-            }
+                return matchId || matchSupplier || matchStatus || matchAmount || matchItemName;
+            });
+            renderTransactionList(filtered);
         }
 
         function renderTransactionList(items) {
@@ -248,7 +311,7 @@
             listContainer.innerHTML = '';
 
             if (items.length === 0) {
-                listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">ไม่พบรายการธุรกรรมในช่วงเวลานี้</p>`;
+                listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">ไม่พบรายการธุรกรรมที่ค้นหา</p>`;
                 return;
             }
 
@@ -282,7 +345,7 @@
             isEditMode = false;
             renderDetailView();
             document.getElementById('actionPanel').classList.remove('hidden');
-            renderTransactionList(isHistoryView ? transactionData.filter(i => i.status !== 'รอตรวจสอบ') : transactionData);
+            renderTransactionList(transactionData);
         }
 
         function renderDetailView() {
@@ -293,7 +356,6 @@
             
             let itemsHtml = '';
             if (isEditMode) {
-                // โหมดแก้ไขรายการและราคาได้จริง
                 itemsHtml = `
                     <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
                         ${item.itemsOrdered.map((i, idx) => `
@@ -325,7 +387,8 @@
                 <div>
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 mb-4 gap-2">
                         <div>
-                            <span class="text-xs bg-red-100 text-red-800 font-bold px-3 py-1 rounded-lg">PK: ${item.id}</span>
+                            <!-- เปลี่ยนคำว่า PK เป็น รหัสธุรกรรม ตามคำขอ -->
+                            <span class="text-xs bg-red-100 text-red-800 font-bold px-3 py-1 rounded-lg">รหัสธุรกรรม: ${item.id}</span>
                             <h2 class="text-base font-bold text-slate-900 mt-1.5">${item.supplier}</h2>
                         </div>
                         <div class="text-left md:text-right">
@@ -335,7 +398,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <!-- ฝั่งซ้าย: ข้อมูลที่บันทึกไว้ในระบบ -->
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                             <h3 class="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
                                 <span>📋 รายการสั่งซื้อตั้งต้นในระบบ</span>
@@ -344,7 +406,6 @@
                             ${itemsHtml}
                         </div>
 
-                        <!-- ฝั่งขวา: หลักฐานภาพถ่าย/PDF ที่ส่งเข้ามา -->
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col items-center justify-center">
                             <h3 class="text-xs font-bold text-slate-700 mb-2 self-start">📷 หลักฐานภาพถ่าย/PDF ที่อัปโหลด</h3>
                             <a href="${item.documentImage}" target="_blank" class="relative group block w-full h-36 overflow-hidden rounded-xl border border-slate-300 bg-white">
@@ -354,7 +415,6 @@
                         </div>
                     </div>
 
-                    <!-- หมายเหตุปัญหา กรณีพบปัญหา / รอแก้ไข -->
                     <div class="bg-red-50/60 p-3.5 rounded-2xl border border-red-200">
                         <label class="block text-xs font-bold text-red-800 mb-1">⚠️ หมายเหตุรายละเอียดปัญหา (สำหรับสถานะพบปัญหา):</label>
                         <input type="text" id="remarkInput" value="${item.remark}" class="w-full border border-red-300 rounded-xl p-2 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-red-500 focus:outline-none" placeholder="ระบุรายละเอียดปัญหาที่พบ...">
@@ -363,13 +423,11 @@
             `;
         }
 
-        // ฟังก์ชันสลับเปิด/ปิดโหมดแก้ไขรายการ
         function toggleEditMode() {
             isEditMode = !isEditMode;
             renderDetailView();
         }
 
-        // ฟังก์ชันบันทึกการแก้ไขรายการจริงๆ ลงใน Object
         function saveEditedDocument() {
             const item = transactionData.find(t => t.id === currentSelectedId);
             if (!item) return;
@@ -392,7 +450,6 @@
             alert('บันทึกการแก้ไขรายการและราคาเรียบร้อยแล้ว!');
         }
 
-        // ฟังก์ชันจำลองปุ่ม Action ต่างๆ
         function openLineChat(target) {
             if (target === 'supplier') {
                 alert('ระบบกำลังเปิดหน้า Line OA ของ Supplier เพื่อพูดคุยและทวงถามเอกสาร...');
@@ -403,29 +460,25 @@
             }
         }
 
-        // บันทึกผลการตรวจ พร้อมแสดง Pop up
         function saveAudit() {
             const item = transactionData.find(t => t.id === currentSelectedId);
             if (item) {
                 const remarkVal = document.getElementById('remarkInput').value;
                 item.remark = remarkVal;
-                // ถ้ามีข้อความปัญหา ให้ปรับสถานะเป็นพบปัญหาอัตโนมัติ หรือถ้าไม่มีให้เป็นปกติ
                 if (remarkVal && remarkVal !== '-' && remarkVal.trim() !== '') {
                     item.status = 'พบปัญหา/รอแก้ไข';
                 } else {
                     item.status = 'ปกติ';
                 }
             }
-            // แสดง Pop up หน้าจอ บันทึกการตรวจเสร็จสิ้น
             document.getElementById('successPopup').classList.remove('hidden');
-            renderTransactionList(isHistoryView ? transactionData.filter(i => i.status !== 'รอตรวจสอบ') : transactionData);
+            renderTransactionList(transactionData);
         }
 
         function closeSuccessPopup() {
             document.getElementById('successPopup').classList.add('hidden');
         }
 
-        // กดปุ่มยกเลิก เปลี่ยนสถานะฝั่งซ้ายมือว่าถูกยกเลิกแล้ว
         function notifyOwner() {
             const confirmSend = confirm('ต้องการยกเลิกรายการนี้ และส่งข้อความแจ้งเตือนหาเถ้าแก่ผ่าน Line OA เพื่อขอสร้างรหัสธุรกรรมใหม่ใช่หรือไม่?');
             if (confirmSend) {
@@ -435,7 +488,7 @@
                     item.remark = 'ยกเลิกรายการและขอรหัสธุรกรรมใหม่จากเถ้าแก่แล้ว';
                 }
                 alert('ส่งข้อความแจ้งเตือนหาเถ้าแก่ (Owner) ผ่าน Line OA สำเร็จ และอัปเดตสถานะเป็น "ถูกยกเลิกแล้ว" เรียบร้อย');
-                renderTransactionList(isHistoryView ? transactionData.filter(i => i.status !== 'รอตรวจสอบ') : transactionData);
+                renderTransactionList(transactionData);
                 selectTransaction(currentSelectedId);
             }
         }
