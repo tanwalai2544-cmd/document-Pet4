@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจสอบหลักฐานและธุรกรรม (Accounting Audit System)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .transaction-card { transition: all 0.2s ease-in-out; }
+        .transaction-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.05); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header / Navigation (White & Red Theme) -->
+    <header class="bg-white border-b border-red-100 shadow-sm sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-red-600 text-white p-2 rounded-xl font-bold shadow-sm shadow-red-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900">ระบบตรวจสอบเอกสารและธุรกรรมนักบัญชี</h1>
+                    <p class="text-xs text-red-600 font-medium">สถานีสัตว์เลี้ยง (Accounting Verification Module)</p>
+                </div>
+            </div>
+            <div class="mt-2 md:mt-0 flex items-center space-x-2">
+                <span class="text-xs bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full font-medium">👤 ผู้ใช้งาน: นักบัญชี (Audit Team)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- Filter & Control Section -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <!-- Quick Filter Today -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">ตัวกรองด่วน</label>
+                    <button id="btnToday" class="w-full bg-red-50 text-red-700 border border-red-200 font-medium py-2 px-4 rounded-xl text-sm hover:bg-red-100 transition flex items-center justify-center space-x-1">
+                        <span>📅 กรองรายการวันนี้ (Today)</span>
+                    </button>
+                </div>
+                <!-- Date Range Start -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">ตั้งแต่วันที่</label>
+                    <input type="date" id="startDate" class="w-full border border-slate-300 rounded-xl p-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                </div>
+                <!-- Date Range End -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">ถึงวันที่</label>
+                    <input type="date" id="endDate" class="w-full border border-slate-300 rounded-xl p-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                </div>
+                <!-- Action Search -->
+                <div>
+                    <button id="btnFilter" class="w-full bg-red-600 text-white font-medium py-2 px-4 rounded-xl text-sm hover:bg-red-700 transition shadow-sm shadow-red-200">
+                        🔍 ค้นหาข้อมูลช่วงวันที่
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Grid: Transaction List & Detail Verification -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left: Transaction List (List View) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:col-span-1">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                    <h2 class="font-bold text-slate-800 text-sm">รายการธุรกรรม (Task List)</h2>
+                    <span id="taskCount" class="text-xs bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full font-medium">0 รายการ</span>
+                </div>
+                <div id="transactionList" class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    <!-- รายการจะถูก Render ที่นี่ -->
+                </div>
+            </div>
+
+            <!-- Right: Document Verification & Action Panel -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2 flex flex-col justify-between">
+                <div id="detailView">
+                    <!-- Default State เมื่อยังไม่เลือกรายการ -->
+                    <div class="text-center py-24 text-slate-400">
+                        <svg class="w-16 h-16 mx-auto mb-3 text-red-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-sm font-medium text-slate-500">กรุณาเลือกเลขอ้างอิงธุรกรรม (Primary Key) จากด้านซ้าย เพื่อตรวจสอบหลักฐาน</p>
+                    </div>
+                </div>
+
+                <!-- Footer Action Buttons (Escalation & Audit Controls) -->
+                <div id="actionPanel" class="border-t border-slate-100 pt-4 mt-6 hidden">
+                    <p class="text-xs font-bold text-slate-600 mb-3">🛠️ เครื่องมือตรวจสอบและจัดการสำหรับนักบัญชี (Audit Actions):</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <button onclick="openLineChat('supplier')" class="bg-emerald-600 text-white text-xs py-2.5 px-3 rounded-xl hover:bg-emerald-700 transition font-medium flex items-center justify-center space-x-1 shadow-sm">
+                            <span>💬 แชท Supplier</span>
+                        </button>
+                        <button onclick="openLineChat('staff')" class="bg-sky-600 text-white text-xs py-2.5 px-3 rounded-xl hover:bg-sky-700 transition font-medium flex items-center justify-center space-x-1 shadow-sm">
+                            <span>👥 แชทพนักงาน</span>
+                        </button>
+                        <button onclick="editDocument()" class="bg-amber-500 text-white text-xs py-2.5 px-3 rounded-xl hover:bg-amber-600 transition font-medium flex items-center justify-center space-x-1 shadow-sm">
+                            <span>✏️ แก้ไขเอกสาร</span>
+                        </button>
+                        <button onclick="saveAudit()" class="bg-red-600 text-white text-xs py-2.5 px-3 rounded-xl hover:bg-red-700 transition font-medium flex items-center justify-center space-x-1 shadow-sm">
+                            <span>💾 บันทึกผลตรวจ</span>
+                        </button>
+                    </div>
+                    <!-- Escalation Button to Owner -->
+                    <div class="mt-3">
+                        <button onclick="notifyOwner()" class="w-full bg-slate-900 text-white text-xs py-3 px-4 rounded-xl hover:bg-slate-800 transition font-semibold flex items-center justify-center space-x-2 shadow-md">
+                            <span>🚨 ยกเลิกรายการ & ส่งแชทหาเถ้าแก่ผ่าน Line OA (ขอสร้างรหัสธุรกรรมใหม่)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- JavaScript Embedded -->
+    <script>
+        // ข้อมูลจำลองภายในตัว (Mock Data) อ้างอิงรูปแบบ Primary Key: 202611001 (ปีพ.ศ.4ตัว + เดือน2ตัว + ลำดับ3ตัว)
+        let transactionData = [
+            {
+                id: "202611001",
+                date: "2026-11-11",
+                supplier: "บริษัท ซัพพลายอาหารสัตว์ไทย จำกัด",
+                docType: "ใบกำกับภาษีซื้อ / ใบรับสินค้า",
+                status: "รอตรวจสอบ",
+                totalAmount: 12500.00,
+                itemsOrdered: [
+                    { name: "อาหารแมวเกรดพรีเมียม (กระสอบ 20kg)", qty: 10, price: 1000 },
+                    { name: "ทรายแมวเต้าหู้ (ถุง 6L)", qty: 50, price: 50 }
+                ],
+                documentImage: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: "202611002",
+                date: "2026-11-11",
+                supplier: "หจก. อุปกรณ์สัตว์เลี้ยงเพ็ทช็อป",
+                docType: "ใบเสร็จรับเงิน / ใบส่งของ",
+                status: "ปกติ",
+                totalAmount: 3400.00,
+                itemsOrdered: [
+                    { name: "กรงสุนัขพับได้ ขนาด L", qty: 2, price: 1200 },
+                    { name: "ของเล่นแมวไม้ล่อ", qty: 20, price: 50 }
+                ],
+                documentImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: "202611003",
+                date: "2026-11-10",
+                supplier: "บริษัท เวชภัณฑ์สัตว์และอุปกรณ์ จำกัด",
+                docType: "ใบเคลมสินค้า",
+                status: "พบปัญหา/รอแก้ไข",
+                totalAmount: 1800.00,
+                itemsOrdered: [
+                    { name: "วิตามินบำรุงขนนกแก้ว", qty: 6, price: 300 }
+                ],
+                documentImage: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        let currentSelectedId = null;
+
+        // เริ่มต้นการทำงานเมื่อโหลดหน้าเว็บ
+        document.addEventListener("DOMContentLoaded", () => {
+            renderTransactionList(transactionData);
+
+            // Event กดปุ่มกรองวันนี้
+            document.getElementById('btnToday').addEventListener('click', () => {
+                const todayStr = "2026-11-11"; // อ้างอิงวันที่ปัจจุบันตามระบบ
+                const filtered = transactionData.filter(item => item.date === todayStr);
+                renderTransactionList(filtered);
+            });
+
+            // Event กดปุ่มค้นหาตามช่วงวันที่
+            document.getElementById('btnFilter').addEventListener('click', () => {
+                const start = document.getElementById('startDate').value;
+                const end = document.getElementById('endDate').value;
+                
+                if(!start || !end) {
+                    alert('กรุณาเลือกวันที่เริ่มต้นและสิ้นสุดให้ครบถ้วน');
+                    return;
+                }
+
+                const filtered = transactionData.filter(item => item.date >= start && item.date <= end);
+                renderTransactionList(filtered);
+            });
+        });
+
+        // ฟังก์ชันแสดงรายการซ้ายมือ
+        function renderTransactionList(items) {
+            const listContainer = document.getElementById('transactionList');
+            document.getElementById('taskCount').innerText = `${items.length} รายการ`;
+            listContainer.innerHTML = '';
+
+            if (items.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">ไม่พบรายการธุรกรรมในช่วงเวลานี้</p>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `transaction-card p-3 rounded-xl border cursor-pointer bg-white ${currentSelectedId === item.id ? 'border-red-500 ring-2 ring-red-100 bg-red-50/20' : 'border-slate-200 hover:border-red-300'}`;
+                card.onclick = () => selectTransaction(item.id);
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs font-bold text-red-600">${item.id}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-medium ${item.status === 'ปกติ' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">${item.status}</span>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-800 truncate">${item.supplier}</p>
+                    <div class="flex justify-between items-center mt-2 text-[11px] text-slate-500">
+                        <span>ประเภท: ${item.docType}</span>
+                        <span class="font-bold text-slate-700">฿${item.totalAmount.toLocaleString()}</span>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        // ฟังก์ชันเลือกรายการเพื่อดูรายละเอียดเปรียบเทียบ
+        function selectTransaction(id) {
+            currentSelectedId = id;
+            const item = transactionData.find(t => t.id === id);
+            if (!item) return;
+
+            const detailView = document.getElementById('detailView');
+            detailView.innerHTML = `
+                <div>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-3 mb-4 gap-2">
+                        <div>
+                            <span class="text-xs bg-red-100 text-red-800 font-bold px-2.5 py-1 rounded-lg">PK: ${item.id}</span>
+                            <h2 class="text-base font-bold text-slate-900 mt-1">${item.supplier}</h2>
+                        </div>
+                        <div class="text-left md:text-right">
+                            <p class="text-xs text-slate-500">วันที่ทำรายการ: ${item.date}</p>
+                            <p class="text-sm font-bold text-red-600">ยอดรวมสุทธิ: ฿${item.totalAmount.toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- ฝั่งซ้าย: ข้อมูลที่บันทึกไว้ในระบบตั้งแต่ตอนสั่ง -->
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                            <h3 class="text-xs font-bold text-slate-700 mb-2 flex items-center space-x-1">
+                                <span>📋 รายการสั่งซื้อตั้งต้นในระบบ (Primary Key Match)</span>
+                            </h3>
+                            <ul class="space-y-2 text-xs text-slate-600 max-h-44 overflow-y-auto">
+                                ${item.itemsOrdered.map(i => `
+                                    <li class="flex justify-between border-b border-slate-200/60 pb-1.5">
+                                        <span>${i.name} (x${i.qty})</span>
+                                        <span class="font-semibold text-slate-700">฿${(i.qty * i.price).toLocaleString()}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+
+                        <!-- ฝั่งขวา: หลักฐานภาพถ่าย/PDF ที่ส่งเข้ามา -->
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
+                            <h3 class="text-xs font-bold text-slate-700 mb-2 self-start">📷 หลักฐานภาพถ่าย/PDF ที่อัปโหลด</h3>
+                            <a href="${item.documentImage}" target="_blank" class="relative group block w-full h-36 overflow-hidden rounded-xl border border-slate-300 bg-white">
+                                <img src="${item.documentImage}" alt="Document Evidence" class="w-full h-full object-cover group-hover:scale-105 transition">
+                                <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-xs font-medium">คลิกเพื่อดูรูปขยายเต็มจอ</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // แสดง Action Panel ด้านล่างสุด
+            document.getElementById('actionPanel').classList.remove('hidden');
+            renderTransactionList(transactionData); 
+        }
+
+        // ฟังก์ชันจำลองปุ่ม Action ต่างๆ
+        function openLineChat(target) {
+            if (target === 'supplier') {
+                alert('ระบบกำลังเปิดหน้า Line OA ของ Supplier เพื่อพูดคุยและทวงถามเอกสาร...');
+                window.open('https://line.me/th/', '_blank');
+            } else {
+                alert('ระบบกำลังเปิดหน้า Line OA การจัดการร้าน เพื่อติดต่อประสานงานกับพนักงาน...');
+                window.open('https://line.me/th/', '_blank');
+            }
+        }
+
+        function editDocument() {
+            alert('เข้าสู่โหมดแก้ไขข้อมูลเอกสาร กรณีพูดคุยตกลงกับ Supplier เรียบร้อยแล้ว');
+        }
+
+        function saveAudit() {
+            alert('บันทึกผลการตรวจสอบของนักบัญชีเรียบร้อยแล้ว!');
+        }
+
+        function notifyOwner() {
+            const confirmSend = confirm('ต้องการยกเลิกรายการนี้ และส่งข้อความแจ้งเตือนหาเถ้าแก่ผ่าน Line OA เพื่อขอสร้างรหัสธุรกรรมใหม่ใช่หรือไม่?');
+            if (confirmSend) {
+                alert('ส่งข้อความแจ้งเตือนหาเถ้าแก่ (Owner) ผ่าน Line OA สำเร็จ! ระบบรอออกรหัสธุรกรรมใหม่');
+            }
+        }
+    </script>
+</body>
+</html>
